@@ -1,3 +1,5 @@
+package ch2;
+
 public class FloatEx1 {
     public static void main(String[] args) {
         float f = 9.1234567890123456789f;

@@ -1,3 +1,5 @@
+package ch2;
+
 class OverflowEx {
     public static void main(String[] args) {
         short sMin = -32768;

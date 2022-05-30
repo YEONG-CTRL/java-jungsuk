@@ -1,3 +1,5 @@
+package ch2;
+
 class PrintfEx2 {
     public static void main(String[] args) {
         String url = "www.codechobo.com";

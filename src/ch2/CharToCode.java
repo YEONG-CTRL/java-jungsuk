@@ -1,3 +1,5 @@
+package ch2;
+
 class CharToCode {
     public static void main(String[] args) {
         char ch = 'A';

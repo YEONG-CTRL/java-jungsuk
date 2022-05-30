@@ -1,3 +1,5 @@
+package ch2;
+
 public class SpecialCharEx {
     public static void main(String[] args) {
         System.out.println('\'');
