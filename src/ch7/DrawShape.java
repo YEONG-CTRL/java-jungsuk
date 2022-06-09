@@ -141,3 +141,4 @@ class Card {
         return "kind : " + kinds[this.kind] + ", number : " + numbers.charAt(this.number);
     }
 }
+
