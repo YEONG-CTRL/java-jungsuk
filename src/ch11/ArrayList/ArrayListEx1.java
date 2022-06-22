@@ -224,3 +224,74 @@ class MyVector implements List {
 //    default void sort(Comparator c) { /* 내용생략 */ }
 //    default Spliterator spliterator() { /* 내용생략 */ }
 }
+
+class MyVector2 extends MyVector implements Iterator {
+    int cursor = 0; // 앞으로 읽어 올 요소의 위치를 저장
+    int lastRet = -1; // 마지막으로 읽어 온 요소의 위치를 저장(항상 커서보다 1작은 값 저장된다)
+
+    public MyVector2(int capacity) { // 생성자
+        super(capacity);
+    }
+
+    public MyVector2() { // 생성자
+        this(10);
+    }
+
+    public String toString() { // 문자열로 변환
+        String tmp = "";
+        Iterator it = iterator();
+
+        for (int i=0; it.hasNext(); i++) {
+            if(i!=0) tmp+=", ";
+            tmp += it.next();
+        }
+
+        return "[" + tmp + "]";
+    }
+
+    public Iterator iterator() {
+        cursor = 0;
+        lastRet = -1;
+        return this;
+    }
+
+    public boolean hasNext() {
+        return cursor != size(); // cursor(앞으로 읽어올 요소)가 size()가 아니라면(인덱스 벗어남)
+    }
+
+    public Object next() {
+        Object next = get(cursor); // 다음 요소 next에 담는다
+        lastRet = cursor++; // cursor를 lastRet에 대입하고, cursor에 1더한다
+        return next;
+    }
+
+    public void remove() {
+        if (lastRet == -1) { // 마지막으로 읽어온 요소가 -1이면(없으면)
+            throw new IllegalStateException();
+        } else {
+            remove(lastRet); // 이전 것 삭제
+            cursor--;      // 객체들이 빈 공간 채우기 위해 자동적으로 이동하기 때문에 cursor의 위치도 같이 이동시킨다
+            lastRet = -1; // 읽어온 요소 삭제했으므로 초기화한다 (읽어온 값이 없다)
+        }
+    }
+}
+
+class MyVector2Test{
+    public static void main(String[] args) {
+        MyVector2 v = new MyVector2();
+        v.add("0");
+        v.add("1");
+        v.add("2");
+        v.add("3");
+        v.add("4");
+
+        System.out.println("삭제 전: " + v);
+        Iterator it = v.iterator();
+        it.next();
+        it.remove();
+        it.next();
+        it.remove();
+
+        System.out.println("삭제 후: " + v);
+    }
+}
