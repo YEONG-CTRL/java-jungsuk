@@ -288,3 +288,371 @@ class ThreadEx11_2 extends Thread {
         }
     }
 }
+
+class ThreadEx12 {
+    public static void main(String[] args) {
+        ThreadEx12_1 th1 = new ThreadEx12_1();
+        ThreadEx12_2 th2 = new ThreadEx12_2();
+        th1.start();
+        th2.start();
+
+        try {
+            Thread.sleep(2000);
+        } catch(InterruptedException e) {}
+
+        System.out.print("<<main 종료>>");
+    }
+}
+
+class ThreadEx12_1 extends Thread {
+    public void run() {
+        for(int i=0; i < 300; i++)
+            System.out.print("-");
+        System.out.print("<<th1 종료>>");
+    }
+}
+class ThreadEx12_2 extends Thread {
+    public void run() {
+        for(int i=0; i < 300; i++)
+            System.out.print("|");
+        System.out.print("<<th2 종료>>");
+    }
+}
+
+
+class ThreadEx13 {
+    public static void main(String[] args) throws Exception {
+        ThreadEx13_1 th1 = new ThreadEx13_1();
+        th1.start();
+        String input = JOptionPane.showInputDialog("아무 값이나 입력하세요.");
+        System.out.println("입력하신 값은 " + input + "입니다");
+        th1.interrupt(); // 사용자의 입력이 끝나면 interrupt
+        System.out.println("isInterrupted(): " + th1.isInterrupted());
+    }
+}
+
+class ThreadEx13_1 extends Thread {
+    public void run() {
+        int i = 10;
+        while(i!=0 && !isInterrupted()) {
+            System.out.println(i--);
+            for(long x=0; x<2500000000L;x++); // 시간지연
+        }
+        System.out.println("카운트가 종료됐습니다"); // 입력끝나고 interrupt걸리면 카운트 끝남
+    }
+}
+
+class ThreadEx14 {
+    public static void main(String[] args) throws Exception {
+        ThreadEx14_1 th1 = new ThreadEx14_1();
+        th1.start();
+
+        String input = JOptionPane.showInputDialog("아무 값이나 입력하세요.");
+        System.out.println("입력하신 값은 " + input + "입니다");
+        th1.interrupt(); // 사용자의 입력이 끝나면 interrupt, 근데 카운트가 종료되지 않는다
+        System.out.println("isInterrupted(): " + th1.isInterrupted());
+    }
+}
+
+class ThreadEx14_1 extends Thread {
+    public void run() {
+        int i = 10;
+
+        while(i!=0 && !isInterrupted()) {
+            System.out.println(i--);
+            try {
+                Thread.sleep(1000); // 1초 지연
+            } catch (InterruptedException e) { }  // interrupt(); 여기 추가하면 interrupted상태를 다시 true로 바꿔주기에 이 경우는 멈춘다
+            // 인터럽트 호출하면 InterruptedException이 발생해서 쓰레드의 interrupted상태 false로 자동초기화
+            // 따라서 카운트 끝나지 않고 이어짐
+        }
+        System.out.println("카운트가 종료됐습니다");
+    }
+}
+
+class ThreadEx15 {
+    public static void main(String[] args) {
+        RunImplEx15 r = new RunImplEx15();
+        Thread th1 = new Thread(r, "*");
+        Thread th2 = new Thread(r, "**");
+        Thread th3 = new Thread(r, "***");
+        th1.start();
+        th2.start();
+        th3.start();
+
+        try {
+            Thread.sleep(2000);
+            th1.suspend(); // 데드락 일으키기 쉬워서 Deprecated됨. 사용하지 않는 것이 좋다
+            Thread.sleep(2000);
+            th2.suspend();
+            Thread.sleep(3000);
+            th1.resume(); // th1 다시 동작
+            Thread.sleep(3000);
+            th1.stop(); // th1 강제종료
+            th2.stop();
+            Thread.sleep(2000);
+            th3.stop();
+        } catch (InterruptedException e) {}
+    }
+}
+
+class RunImplEx15 implements Runnable {
+    public void run() {
+        while(true) {
+            System.out.println(Thread.currentThread().getName());
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {}
+        }
+    }
+}
+
+class ThreadEx16 {
+    public static void main(String[] args) {
+        RunImplEx16 r1 = new RunImplEx16();
+        RunImplEx16 r2 = new RunImplEx16();
+        RunImplEx16 r3 = new RunImplEx16();
+        Thread th1 = new Thread(r1, "*"); // 각 쓰레드가 각기 다른 실행상태 가질 수 있게
+        Thread th2 = new Thread(r2, "**");  // 여러 RunImplEx16 객체를 사용(하나의 객체 공유 x)
+        Thread th3 = new Thread(r3, "***");
+        th1.start();
+        th2.start();
+        th3.start();
+
+        try {
+            Thread.sleep(2000);
+            r1.suspend();
+            Thread.sleep(2000);
+            r2.suspend();
+            Thread.sleep(3000);
+            r1.resume();
+            Thread.sleep(3000);
+            r1.stop();
+            r2.stop();
+            Thread.sleep(2000);
+            r3.stop();
+        } catch (InterruptedException e) {}
+    }
+}
+class RunImplEx16 implements Runnable {
+    volatile boolean suspended  = false;
+    volatile boolean stopped    = false;
+    public void run() { // suspended와 stopped 인스턴스 변수를 통해 쓰레드의 작업을 중지 - 재개 - 종료하도록 함
+        while(!stopped) {
+            if(!suspended) {
+                System.out.println(Thread.currentThread().getName());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {}
+            }
+        }
+        System.out.println(Thread.currentThread().getName() + " - stopped");
+    }
+    public void suspend() { suspended = true; }
+    public void resume() { suspended = false; }
+    public void stop() { stopped = true; }
+}
+
+class ThreadEx17 {
+    public static void main(String[] args) {
+        ThreadEx17_1 th1 = new ThreadEx17_1("*");
+        ThreadEx17_1 th2 = new ThreadEx17_1("**");
+        ThreadEx17_1 th3 = new ThreadEx17_1("***");
+
+        th1.start();
+        th2.start();
+        th3.start();
+
+        try {
+            Thread.sleep(2000);
+            th1.suspend();
+            Thread.sleep(2000);
+            th2.suspend();
+            Thread.sleep(3000);
+            th1.resume();
+            Thread.sleep(3000);
+            th1.stop();
+            th2.stop();
+            Thread.sleep(2000);
+            th3.stop();
+        } catch (InterruptedException e) {}
+    }
+}
+class ThreadEx17_1 implements Runnable {
+    volatile boolean suspended  = false;
+    volatile boolean stopped    = false;
+
+    Thread th;
+
+    ThreadEx17_1(String name) {
+        th = new Thread(this, name); // Thread(Runnable r, String name)
+    }
+    public void run() {
+        while(!stopped) {
+            if(!suspended) {
+                System.out.println(Thread.currentThread().getName());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {}
+            }
+        }
+        System.out.println(Thread.currentThread().getName() + " - stopped");
+    }
+    public void suspend() { suspended = true; }
+    public void resume() { suspended = false; }
+    public void stop() { stopped = true; }
+    public void start() { th.start(); }
+}
+
+class ThreadEx18 {
+    public static void main(String[] args) {
+        ThreadEx18_1 th1 = new ThreadEx18_1("*");
+        ThreadEx18_1 th2 = new ThreadEx18_1("**");
+        ThreadEx18_1 th3 = new ThreadEx18_1("***");
+
+        th1.start();
+        th2.start();
+        th3.start();
+
+        try {
+            Thread.sleep(2000);
+            th1.suspend();
+            Thread.sleep(2000);
+            th2.suspend();
+            Thread.sleep(3000);
+            th1.resume();
+            Thread.sleep(3000);
+            th1.stop();
+            th2.stop();
+            Thread.sleep(2000);
+            th3.stop();
+        } catch (InterruptedException e) {}
+    }
+}
+
+class ThreadEx18_1 implements Runnable {
+    volatile boolean suspended  = false;
+    volatile boolean stopped    = false;
+
+    Thread th;
+
+    ThreadEx18_1(String name) {
+        th = new Thread(this, name); // Thread(Runnable r, String name)
+    }
+    public void run() {
+        String name = th.getName();
+
+        while(!stopped) {
+            if(!suspended) {
+                System.out.println(name);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    System.out.println(name + " - interrupted");
+                }
+            } else {
+                Thread.yield(); // yield()가 없다면, suspended값이 true일때 쓰레드는 while문을 의미없이 돌게된다(busy waiting)
+            }
+        }
+        System.out.println(Thread.currentThread().getName() + " - stopped");
+    }
+
+    public void suspend() {
+        suspended = true;
+        th.interrupt(); // suspend()가 호출됐어도, 쓰레드가 sleep중이면 최대 1초의 지연시간이 걸린다.
+        // 따라서 sleep()에서 InteeruptedException을 발생해서 바로 벗어날수 있게 해주면 응답성이 좋아진다
+        System.out.println(th.getName() + " - interrupt() by suspend() ");
+    }
+    public void stop() {
+        stopped = true;
+        th.interrupt(); // 여기도 마찬가지
+        System.out.println(th.getName() + " - interrupt() by stop()");
+    }
+    public void resume() { suspended = false; }
+    public void start() { th.start(); }
+}
+
+class ThreadEx19 {
+    static long startTime = 0;
+
+    public static void main(String[] args) {
+        ThreadEx19_1 th1 = new ThreadEx19_1();
+        ThreadEx19_2 th2 = new ThreadEx19_2();
+        th1.start();
+        th2.start();
+        startTime = System.currentTimeMillis();
+
+        try {
+            th1.join();
+            th2.join();
+        } catch (InterruptedException e) {
+        }
+
+        System.out.println("소요시간 :" + (System.currentTimeMillis() - ThreadEx19.startTime));
+    }
+}
+class ThreadEx19_1 extends Thread {
+    public void run() {
+        for (int i=0; i < 300; i++) {
+            System.out.println(new String("-"));
+        }
+    }
+}
+
+class ThreadEx19_2 extends Thread {
+    public void run() {
+        for (int i=0; i < 300; i++) {
+            System.out.println(new String("|"));
+        }
+    }
+}
+
+class ThreadEx20 {
+    public static void main(String[] args) {
+        ThreadEx20_1 gc = new ThreadEx20_1();
+        gc.setDaemon(true); // 데몬쓰레드로 설정
+        gc.start();
+
+        int requiredMemory = 0;
+
+        for(int i=0; i<20; i++) {
+            requiredMemory = (int)(Math.random() * 10) * 20;
+
+            if(gc.freeMemory() < requiredMemory || gc.freeMemory() < gc.totalMemory() * 0.4) {
+                gc.interrupt(); // 남은 메모리가 부족할시 interrupt호출하여 즉시 가비지 콜렉터 gc()수행(sleep중 exception걸림)
+                try {
+                    gc.join(100); // gc가 interrupt에 의해 깨어났음에도, gc()수행되기 전에 main쓰레드 작업 수행되어 메모리 사용함
+                    // 따라서 gc를 개울뿐 아니라, join()을 이용하여 main쓰레드가 gc의 작업이 끝날때까지(0.1초) 기다리도록 함
+                } catch (InterruptedException e) {}
+            }
+
+            gc.usedMemory += requiredMemory;
+            System.out.println("usedMemory :" + gc.usedMemory);
+        }
+    }
+}
+
+class ThreadEx20_1 extends Thread {
+    final static int MAX_MEMORY = 1000;
+    int   usedMemory = 0;
+
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(10*1000); // 10초마다 한번씩 가비지컬렉션 수행하는 쓰레드
+            } catch (InterruptedException e) {
+                System.out.println("Awaken by interrupt(). ");
+            }
+
+            gc(); // 가비지 콜렉션을 수행
+            System.out.println("GarbageCollected. Free Memory : " + freeMemory());
+        }
+    }
+
+    public void gc() {
+        usedMemory -= 300;
+        if(usedMemory < 0) usedMemory = 0;
+    }
+    public int totalMemory() { return MAX_MEMORY; }
+    public int freeMemory() { return MAX_MEMORY - usedMemory; }
+}
