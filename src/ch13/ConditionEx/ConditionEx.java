@@ -1,43 +1,10 @@
-package ch13;
+package ch13.ConditionEx;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class ThreadSynchronizationEx {
-    public static void main(String[] args) {
-        Runnable r = new RunnableEx21();
-        new Thread(r).start();
-        new Thread(r).start(); //
-    }
-}
-
-class Account {
-    private int balance = 1000; // balance 인스턴스 변수 접근제어자 private 아니면, 외부에서 직접 접근할 수 있기에 동기화 하더라도 값의 변경 막을 수 없다
-
-    public int getBalance() {
-        return balance;
-    }
-
-    public synchronized void withdraw(int money) { // 쓰레드 두개돌면서 잔고 마이너스 나지 않게 임계영역 설정
-        if(balance >= money) {
-            try { Thread.sleep(1000); } catch (InterruptedException e) {}
-            balance -= money;
-        }
-    }
-}
-
-class RunnableEx21 implements Runnable {
-    Account acc = new Account();
-
-    public void run() {
-        while (acc.getBalance() > 0) {
-            int money = (int)(Math.random() * 3 + 1) * 100;
-            acc.withdraw(money);
-            System.out.println("balance :" + acc.getBalance());
-        }
-    }
-}
-
-class ThreadWaitEx1 {
+class ConditionEx {
     public static void main(String[] args) throws Exception {
         Table table = new Table();
 
@@ -45,7 +12,7 @@ class ThreadWaitEx1 {
         new Thread(new Customer(table, "donut"), "CUST1").start();
         new Thread(new Customer(table, "burger"), "CUST2").start();
 
-        Thread.sleep(5000);
+        Thread.sleep(2000);
         System.exit(0);    // 프로그램 전체 종료
     }
 }
@@ -70,7 +37,7 @@ class Customer implements Runnable {
 }
 
 class Cook implements Runnable {
-    private  Table table; // 여러 쓰레드가 table을 공유
+    private Table table; // 여러 쓰레드가 table을 공유
 
     Cook(Table table) { this.table = table; }
 
@@ -78,7 +45,6 @@ class Cook implements Runnable {
         while (true) {
             int idx = (int) (Math.random() * table.dishNum());
             table.add(table.dishNames[idx]);
-
             try { Thread.sleep(10) ; } catch (InterruptedException e) {}
         }
     }
@@ -89,54 +55,64 @@ class Table {
     final int MAX_FOOD = 6;
     private ArrayList<String> dishes = new ArrayList<>();
 
-    public synchronized void add(String dish) {
+    private ReentrantLock lock = new ReentrantLock();
+    private Condition forCook  = lock.newCondition();
+    private Condition forCust  = lock.newCondition();
+
+    public void add(String dish) {
+        lock.lock();
+
+        try {
         while (dishes.size() >= MAX_FOOD) {
             String name = Thread.currentThread().getName();
             System.out.println(name + "is waiting");
             try {
-                wait(); // COOK쓰레드를 기다리게
-
+                forCook.await(); // COOK쓰레드를 명시하여 기다리게
                 Thread.sleep(500);
             } catch (InterruptedException e) {
             }
         }
         dishes.add(dish);
-        notify(); // 잠자고 있는 CUST를 깨우기 위함
+        forCust.signal(); // 잠자고 있는 CUST를 깨우기 위함 (notify)
         System.out.println("Dishes : " + dishes.toString());
+    } finally {
+            lock.unlock(); // finally로 반드시 lock이 풀리게 한다
+        }
     }
 
     public void remove(String dishName) {
+        lock.lock();
+        String name = Thread.currentThread().getName();
 
-        synchronized (this) {
-            String name = Thread.currentThread().getName();
-
+        try {
             while (dishes.size() == 0) {
                 System.out.println(name + "is waiting");
                 try {
-                    wait(); // CUST쓰레드를 기다리게 한다
+                    forCust.await(); // CUST쓰레드를 기다리게 한다
                     Thread.sleep(500);
-                } catch (InterruptedException e) {
-                }
+                } catch (InterruptedException e) {}
             }
             while (true) {
                 for (int i = 0; i < dishes.size(); i++) {
                     if (dishName.equals(dishes.get(i))) {
                         dishes.remove(i);
-                        notify(); // 잠자고 있는 COOK을 깨움
+                        forCook.signal(); // 잠자고 있는 COOK을 깨움
                         return;
                     }
                 }
                 try {
                     System.out.println(name + "is waiting");
-                    wait(); // 원하는 음식이 없는 CUST를 기다리게 한다
+                    forCust.await(); // 원하는 음식이 없는 CUST를 기다리게 한다
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                 }
             }
+        } finally {
+            lock.unlock();
         }
     }
+
     public int dishNum() {
         return dishNames.length;
     }
 }
-
