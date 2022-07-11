@@ -1,5 +1,7 @@
 package 연습문제.ch7;
 
+import java.util.Arrays;
+
 class SutdaDeck {
     final int CARD_NUM = 20;
     SutdaCard[] cards = new SutdaCard[CARD_NUM];
@@ -39,18 +41,18 @@ class SutdaDeck {
 
 }
 class SutdaCard {
-    int num;
-    boolean isKwang;
+    final int NUM;
+    final boolean IS_KWANG; // final이 붙은 변수는 선언과 초기화를 동시에 해야하나, 인스턴스 변수의 경우 생성자에서 초기화 할 수 있다
     SutdaCard() {
         this(1, true);
     }
     SutdaCard(int num, boolean isKwang) {
-        this.num = num;
-        this.isKwang = isKwang;
+        this.NUM = num;
+        this.IS_KWANG = isKwang;
     }
     // info()대신 Object클래스의 toString()을 오버라이딩했다.
     public String toString() {
-        return num + ( isKwang ? "K":"");
+        return NUM + ( IS_KWANG ? "K":"");
     }
 }
 class Exercise {
@@ -167,3 +169,65 @@ class Exercise7_10 {
         System.out.println("VOL:"+t.getVolume());
     }
 }
+
+abstract class Unit {
+    int x,y;
+
+    abstract void move(int x, int y); // 추상클래스
+    void stop() { /* 현재 위치에 정지 */ }
+}
+
+class Marine extends Unit{ // 보병
+    void move(int x, int y) { /* 지정된 위치로 이동 */ }
+    void stimPack() { /* 스팀팩을 사용한다.*/}
+}
+class Tank extends Unit{ // 탱크
+    void move(int x, int y) { /* 지정된 위치로 이동 */ }
+    void changeMode() { /* 공격모드를 변환한다. */}
+}
+class Dropship extends Unit{ // 수송선
+    void move(int x, int y) { /* 지정된 위치로 이동 */ }
+    void load() { /* 선택된 대상을 태운다.*/ }
+    void unload() { /* 선택된 대상을 내린다.*/ }
+}
+
+class Exercise18 {
+    public static void action(Robot r) {
+        if (r instanceof DanceRobot) {
+            DanceRobot dr = (DanceRobot) r;
+            dr.dance();
+
+        } else if (r instanceof SingRobot) {
+            SingRobot sr = (SingRobot) r;
+            sr.sing();
+            
+        } else if (r instanceof DrawRobot) {
+            DrawRobot drr = (DrawRobot) r;
+            drr.draw();
+        }
+    }
+    public static void main(String[] args) {
+        Robot[] arr = { new DanceRobot(), new SingRobot(), new DrawRobot()};
+        for(int i=0; i< arr.length;i++)
+            action(arr[i]);
+    } // main
+}
+class Robot {}
+class DanceRobot extends Robot {
+    void dance() {
+        System.out.println("춤을 춥니다.");
+    }
+}
+class SingRobot extends Robot {
+    void sing() {
+        System.out.println("노래를 합니다.");
+    }
+}
+class DrawRobot extends Robot {
+    void draw() {
+        System.out.println("그림을 그립니다.");
+    }
+}
+
+
+
