@@ -143,3 +143,74 @@ class Exercise11_6 {
         System.out.println("[90~100] :"+getGroupCount(set,90,101));
     }
 }
+
+class Exercise11_10 {
+    public static void main(String[] args) {
+//        LinkedHashSet set = new LinkedHashSet();
+        HashSet set = new HashSet();
+        int[][] board = new int[5][5];
+        for(int i=0; set.size() < 25; i++) {
+            set.add((int)(Math.random()*30)+1+"");
+        }
+
+        ArrayList list = new ArrayList(set);
+        Collections.shuffle(list);
+
+        Iterator it = list.iterator();
+        for(int i=0; i < board.length; i++) {
+            for(int j=0; j < board[i].length; j++) {
+                board[i][j] = Integer.parseInt((String)it.next());
+                System.out.print((board[i][j] < 10 ? "  " : " ") // 칸수 채우기용
+                        + board[i][j]);
+            }
+            System.out.println();
+        }
+    } // main
+}
+/* HashSet은 저장된 순서를 보장하지 않고,해싱알고리즘에 따라 자체적으로 순서를 결정,
+ 이 경우에는 1. LinkedHashSet이 더 나은 선택 */
+// 2. List 인터페이스를 구현한 컬렉션 클래스를 사용하도록 변경
+
+
+class SutdaCard {
+    int num;
+    boolean isKwang;
+    SutdaCard() {
+        this(1, true);
+    }
+    SutdaCard(int num, boolean isKwang) {
+        this.num = num;
+        this.isKwang = isKwang;
+    }
+    public boolean equals(Object obj) {
+        if(obj instanceof SutdaCard) {
+            SutdaCard c = (SutdaCard)obj;
+            return num==c.num && isKwang==c.isKwang;
+        } else {
+            return false;
+        }
+    }
+    public String toString() {
+        return num + ( isKwang ? "K":"");
+    }
+
+    public int hashCode() {
+        return Objects.hashCode(this.toString());
+        // 다른 객체라도 인스턴스 변수 값이 같으면 같은 객체로 인식하게 해야함
+        // HashSet의 add 메서드는 새로운 요소 추가하기 전, 기존에 저장된 요소와 같은 것인지 판별하기 위해 추가하려는 요쇼의 equals()와 hashCode()를 호출
+        // java.util.objects 클래스의 hash() 이용하여 hashCode() 오버라이딩
+    }
+}
+class Exercise11_11 {
+    public static void main(String[] args) {
+        SutdaCard c1 = new SutdaCard(3,true);
+        SutdaCard c2 = new SutdaCard(3,true);
+        SutdaCard c3 = new SutdaCard(1,true);
+        HashSet set = new HashSet();
+        set.add(c1);
+        set.add(c2);
+        set.add(c3);
+        System.out.println(set);
+    }
+}
+
