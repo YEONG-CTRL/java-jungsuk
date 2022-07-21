@@ -346,7 +346,7 @@ class FileSplit {
             System.exit(0);
         }
 
-        final int VOLUME = Integer.parseInt(args[1]) * 1000;
+        final int VOLUME = Integer.parseInt(args[1]) * 1000; // 볼륨 상수
 
         try {
             String filename = args[0];
@@ -361,9 +361,9 @@ class FileSplit {
             int number = 0;
 
             while ((data = bis.read()) != -1) {
-                if (i%VOLUME ==0) {
+                if (i%VOLUME ==0) { // i가 VOLUME만큼 커지면
                     if (i!=0) {
-                        bos.close();
+                        bos.close(); // bos 닫는다
                     }
 
                     fos = new FileOutputStream(filename + "_." + ++number);
@@ -377,5 +377,52 @@ class FileSplit {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+}
+
+class FileMerge {
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("USAGE : java FileMerge filename");
+            System.exit(0);
+        }
+
+        String mergeFilename = args[0]; // 합칠 파일이름
+
+        try {
+            File tempFile = File.createTempFile("~mergetemp", ".tmp");//작업할 임시파일을 만든다
+            tempFile.deleteOnExit(); // 프로그램 종료시 삭제
+
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+
+            BufferedInputStream bis = null;
+
+            int number = 1;
+
+            File f = new File(mergeFilename + "_." + number); // 인자로 받은 합칠 파일이름 통해 File f 생성
+
+            while (f.exists()) {  // f가 있다면 f에서 입력받아서 tempFile에 쓴다
+                f.setReadOnly();
+                bis = new BufferedInputStream(new FileInputStream(f));
+
+                int data = 0;
+                while ((data = bis.read()) != -1) {
+                    bos.write(data);
+                }
+
+                bis.close();
+                f.delete();
+                f = new File(mergeFilename + "_." + ++number); // f는 번호 하나 늘려가며 더이상 없을때까지 확인
+            }
+
+            bos.close();
+
+            File oldFile = new File(mergeFilename); // 기존파일 있다면 삭제하고
+            if (oldFile.exists()) {
+                oldFile.delete();
+            }
+            tempFile.renameTo(oldFile); // tempFile로 대체한다
+        } catch (IOException e) {}
     }
 }
