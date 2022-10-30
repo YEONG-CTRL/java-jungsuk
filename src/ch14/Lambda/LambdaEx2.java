@@ -1,4 +1,6 @@
-package ch14;
+package ch14.Lambda;
+
+import ch14.Lambda.MyFunction;
 
 @FunctionalInterface
 interface MyFunction2 {

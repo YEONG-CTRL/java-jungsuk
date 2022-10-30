@@ -1,4 +1,4 @@
-package ch14;
+package ch14.Lambda;
 
 import java.util.ArrayList;
 import java.util.HashMap;
